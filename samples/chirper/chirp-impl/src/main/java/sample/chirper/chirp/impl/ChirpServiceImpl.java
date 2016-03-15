@@ -119,7 +119,7 @@ public class ChirpServiceImpl implements ChirpService {
   }
 
   private Chirp mapChirp(Row row) {
-    return new Chirp(row.getString("userId"), row.getString("message"), 
+    return new Chirp(row.getString("userId"), row.getString("message"),
         Optional.of(Instant.ofEpochMilli(row.getLong("timestamp"))), Optional.of(row.getString("uuid")));
   }
 

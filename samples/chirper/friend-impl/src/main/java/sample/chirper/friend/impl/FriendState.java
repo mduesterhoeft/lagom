@@ -34,6 +34,13 @@ public final class FriendState implements Jsonable {
     return new FriendState(Optional.of(new User(user.get().userId, user.get().name, Optional.of(newFriends))));
   }
 
+  public FriendState removeFriend(String friendUserId) {
+    if (!user.isPresent())
+      throw new IllegalStateException("friend can't be removed before user is created");
+    PSequence<String> newFriends = user.get().friends.minus(friendUserId);
+    return new FriendState(Optional.of(new User(user.get().userId, user.get().name, Optional.of(newFriends))));
+  }
+
   @Override
   public boolean equals(@Nullable Object another) {
     if (this == another)

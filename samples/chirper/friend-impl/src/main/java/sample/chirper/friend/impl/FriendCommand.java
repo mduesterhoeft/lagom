@@ -144,4 +144,39 @@ public interface FriendCommand extends Jsonable {
     }
   }
 
+  @SuppressWarnings("serial")
+  @Immutable
+  @JsonDeserialize
+  public final class RemoveFriend implements FriendCommand,PersistentEntity.ReplyType<Done> {
+    public final String friendUserId;
+
+    @JsonCreator
+    public RemoveFriend(String friendUserId) {
+      this.friendUserId = Preconditions.checkNotNull(friendUserId, "friendUserId");
+    }
+
+    @Override
+    public boolean equals(@Nullable Object another) {
+      if (this == another)
+        return true;
+      return another instanceof RemoveFriend && equalTo((RemoveFriend) another);
+    }
+
+    private boolean equalTo(RemoveFriend another) {
+      return friendUserId.equals(another.friendUserId);
+    }
+
+    @Override
+    public int hashCode() {
+      int h = 31;
+      h = h * 17 + friendUserId.hashCode();
+      return h;
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper("RemoveFriend").add("friendUserId", friendUserId).toString();
+    }
+  }
+
 }

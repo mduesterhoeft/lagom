@@ -23,6 +23,7 @@ import sample.chirper.friend.api.User;
 import sample.chirper.friend.impl.FriendCommand.AddFriend;
 import sample.chirper.friend.impl.FriendCommand.CreateUser;
 import sample.chirper.friend.impl.FriendCommand.GetUser;
+import sample.chirper.friend.impl.FriendCommand.RemoveFriend;
 
 public class FriendServiceImpl implements FriendService {
 
@@ -63,7 +64,15 @@ public class FriendServiceImpl implements FriendService {
   public ServiceCall<String, FriendId, NotUsed> addFriend() {
     return (id, request) -> {
       return friendEntityRef(id).ask(new AddFriend(request.friendId))
-          .thenApply(ack -> NotUsed.getInstance());
+          .thenApply(ack -> Created.getInstance());
+    };
+  }
+
+  @Override
+  public ServiceCall<String, FriendId, NotUsed> removeFriend() {
+    return (id, request) -> {
+      return friendEntityRef(id).ask(new RemoveFriend(request.friendId))
+              .thenApply(ack -> NotUsed.getInstance());
     };
   }
 

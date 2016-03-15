@@ -14,14 +14,20 @@ import com.lightbend.lagom.javadsl.persistence.cassandra.CassandraSession;
 
 import akka.Done;
 import sample.chirper.friend.impl.FriendEvent.FriendAdded;
+import sample.chirper.friend.impl.FriendEvent.FriendRemoved;
 
 public class FriendEventProcessor extends CassandraReadSideProcessor<FriendEvent> {
 
   private PreparedStatement writeFollowers = null; // initialized in prepare
+  private PreparedStatement removeFollowers = null; // initialized in prepare
   private PreparedStatement writeOffset = null; // initialized in prepare
 
   private void setWriteFollowers(PreparedStatement writeFollowers) {
     this.writeFollowers = writeFollowers;
+  }
+
+  private void setRemoveFollowers(PreparedStatement removeFollowers) {
+    this.removeFollowers = removeFollowers;
   }
 
   private void setWriteOffset(PreparedStatement writeOffset) {
@@ -39,8 +45,9 @@ public class FriendEventProcessor extends CassandraReadSideProcessor<FriendEvent
     return
       prepareCreateTables(session).thenCompose(a ->
       prepareWriteFollowers(session).thenCompose(b ->
-      prepareWriteOffset(session).thenCompose(c ->
-      selectOffset(session))));
+      prepareRemoveFollowers(session).thenCompose(c ->
+      prepareWriteOffset(session).thenCompose(d ->
+      selectOffset(session)))));
     // @formatter:on
   }
 
@@ -64,6 +71,13 @@ public class FriendEventProcessor extends CassandraReadSideProcessor<FriendEvent
     });
   }
 
+  private CompletionStage<Done> prepareRemoveFollowers(CassandraSession session) {
+    return session.prepare("DELETE FROM follower where userId = ? and followedBy = ?").thenApply(ps -> {
+      setRemoveFollowers(ps);
+      return Done.getInstance();
+    });
+  }
+
   private CompletionStage<Done> prepareWriteOffset(CassandraSession session) {
     return session.prepare("INSERT INTO friend_offset (partition, offset) VALUES (1, ?)").thenApply(ps -> {
       setWriteOffset(ps);
@@ -80,6 +94,7 @@ public class FriendEventProcessor extends CassandraReadSideProcessor<FriendEvent
   @Override
   public EventHandlers defineEventHandlers(EventHandlersBuilder builder) {
     builder.setEventHandler(FriendAdded.class, this::processFriendChanged);
+    builder.setEventHandler(FriendRemoved.class, this::processFriendRemoved);
     return builder.build();
   }
 
@@ -89,6 +104,14 @@ public class FriendEventProcessor extends CassandraReadSideProcessor<FriendEvent
     bindWriteFollowers.setString("followedBy", event.userId);
     BoundStatement bindWriteOffset = writeOffset.bind(offset);
     return completedStatements(Arrays.asList(bindWriteFollowers, bindWriteOffset));
+  }
+
+  private CompletionStage<List<BoundStatement>> processFriendRemoved(FriendRemoved event, UUID offset) {
+    BoundStatement bindRemoveFollowers = removeFollowers.bind();
+    bindRemoveFollowers.setString("userId", event.friendId);
+    bindRemoveFollowers.setString("followedBy", event.userId);
+    BoundStatement bindWriteOffset = writeOffset.bind(offset);
+    return completedStatements(Arrays.asList(bindRemoveFollowers, bindWriteOffset));
   }
 
 

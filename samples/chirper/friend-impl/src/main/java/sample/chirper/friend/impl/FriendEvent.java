@@ -114,4 +114,52 @@ public interface FriendEvent extends Jsonable, AggregateEvent<FriendEvent> {
     }
   }
 
+  @SuppressWarnings("serial")
+  @Immutable
+  @JsonDeserialize
+  public class FriendRemoved implements FriendEvent {
+    public final String userId;
+    public final String friendId;
+    public final Instant timestamp;
+
+    public FriendRemoved(String userId, String friendId) {
+      this(userId, friendId, Optional.empty());
+    }
+
+    @JsonCreator
+    public FriendRemoved(String userId, String friendId, Optional<Instant> timestamp) {
+      this.userId = Preconditions.checkNotNull(userId, "userId");
+      this.friendId = Preconditions.checkNotNull(friendId, "friendId");
+      this.timestamp = timestamp.orElseGet(() -> Instant.now());
+    }
+
+    @Override
+    public boolean equals(@Nullable Object another) {
+      if (this == another)
+        return true;
+      return another instanceof FriendRemoved && equalTo((FriendRemoved) another);
+    }
+
+    private boolean equalTo(FriendRemoved another) {
+      return userId.equals(another.userId) && friendId.equals(another.friendId) && timestamp.equals(another.timestamp);
+    }
+
+    @Override
+    public int hashCode() {
+      int h = 31;
+      h = h * 17 + userId.hashCode();
+      h = h * 17 + friendId.hashCode();
+      h = h * 17 + timestamp.hashCode();
+      return h;
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper("FriendRemoved").add("userId", userId).add("friendId", friendId)
+              .add("timestamp", timestamp).toString();
+    }
+  }
+
+
+
 }

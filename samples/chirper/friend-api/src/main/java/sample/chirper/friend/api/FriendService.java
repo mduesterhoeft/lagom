@@ -3,12 +3,14 @@ package sample.chirper.friend.api;
 import static com.lightbend.lagom.javadsl.api.Service.named;
 import static com.lightbend.lagom.javadsl.api.Service.restCall;
 
-import akka.NotUsed;
+import org.pcollections.PSequence;
+
 import com.lightbend.lagom.javadsl.api.Descriptor;
 import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.api.transport.Method;
-import org.pcollections.PSequence;
+
+import akka.NotUsed;
 
 /**
  * The friend service.
@@ -37,6 +39,8 @@ public interface FriendService extends Service {
    */
   ServiceCall<String, FriendId, NotUsed> addFriend();
 
+  ServiceCall<String, FriendId, NotUsed> removeFriend();
+
   /**
    * Service call for getting the followers of a user.
    *
@@ -52,6 +56,7 @@ public interface FriendService extends Service {
         restCall(Method.GET,  "/api/users/:id", getUser()),
         restCall(Method.POST, "/api/users", createUser()),
         restCall(Method.POST, "/api/users/:userId/friends", addFriend()),
+        restCall(Method.DELETE, "/api/users/:userId/friends", removeFriend()),
         restCall(Method.GET,  "/api/users/:id/followers", getFollowers())
       ).withAutoAcl(true);
     // @formatter:on

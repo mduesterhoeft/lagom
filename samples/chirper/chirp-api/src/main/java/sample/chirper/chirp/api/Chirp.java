@@ -28,15 +28,13 @@ public final class Chirp implements Jsonable {
   public Chirp(String userId, String message, Optional<Instant> timestamp, Optional<String> uuid) {
     this.userId = Preconditions.checkNotNull(userId, "userId");
     this.message = Preconditions.checkNotNull(message, "message");
-    this.timestamp = timestamp.orElseGet(() -> Instant.now());
+    this.timestamp = timestamp.orElseGet(Instant::now);
     this.uuid = uuid.orElseGet(() -> UUID.randomUUID().toString());
   }
 
   @Override
   public boolean equals(@Nullable Object another) {
-    if (this == another)
-      return true;
-      return another instanceof Chirp && equalTo((Chirp) another);
+    return this == another || another instanceof Chirp && equalTo((Chirp) another);
   }
 
   private boolean equalTo(Chirp another) {
